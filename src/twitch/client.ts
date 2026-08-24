@@ -1,0 +1,49 @@
+import { ChatClient } from "@twurple/chat";
+import { config } from "../config.js";
+import { logger } from "../logger.js";
+import { createTwitchAuthProvider } from "./authProvider.js";
+import { basicCommands } from "./commands/basic.js";
+import type { TwitchCommand } from "./commands/types.js";
+
+export async function startTwitchBot() {
+  const authProvider = await createTwitchAuthProvider();
+
+  const commands: TwitchCommand[] = [...basicCommands];
+  const commandMap = new Map(commands.map((c) => [c.name, c]));
+
+  const chatClient = new ChatClient({ authProvider, channels: config.TWITCH_CHANNELS });
+
+  chatClient.onConnect(() => {
+    logger.info({ channels: config.TWITCH_CHANNELS }, "Twitch chat client connected");
+  });
+
+  chatClient.onMessage(async (channel, user, text, msg) => {
+    if (!text.startsWith(config.TWITCH_COMMAND_PREFIX)) return;
+    const [rawName, ...args] = text.slice(config.TWITCH_COMMAND_PREFIX.length).trim().split(/\s+/);
+    const name = rawName?.toLowerCase();
+    if (!name) return;
+
+    const command = commandMap.get(name);
+    if (!command) return;
+
+    const reply = async (replyText: string) => {
+      await chatClient.say(channel, replyText, { replyTo: msg.id });
+    };
+
+    try {
+      await command.run({
+        channel: channel.replace(/^#/, ""),
+        userId: msg.userInfo.userId,
+        userName: msg.userInfo.displayName,
+        args,
+        reply,
+      });
+    } catch (err) {
+      logger.error({ err, command: name }, "Error executing Twitch command");
+      await reply("Something went wrong running that command.");
+    }
+  });
+
+  await chatClient.connect();
+  return chatClient;
+}

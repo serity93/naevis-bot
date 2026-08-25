@@ -1,6 +1,7 @@
 import { logger } from "./logger.js";
 import { startDiscordBot } from "./discord/client.js";
 import { startTwitchBot } from "./twitch/client.js";
+import { prisma } from "./db/client.js";
 
 async function main() {
   logger.info("Starting naevis-bot...");
@@ -20,13 +21,18 @@ async function main() {
   }
 }
 
-function shutdown() {
+async function shutdown() {
   logger.info("Shutting down...");
+  try {
+    await prisma.$disconnect();
+  } catch (err) {
+    logger.error({ err }, "Error disconnecting Prisma client");
+  }
   process.exit(0);
 }
 
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+process.on("SIGINT", () => void shutdown());
+process.on("SIGTERM", () => void shutdown());
 
 main().catch((err) => {
   logger.fatal({ err }, "Fatal error during startup");

@@ -1,6 +1,7 @@
 import { ChatClient } from "@twurple/chat";
 import { config } from "../config.js";
 import { logger } from "../logger.js";
+import { recordUserSeen } from "../core/users/userService.js";
 import { createTwitchAuthProvider } from "./authProvider.js";
 import { basicCommands } from "./commands/basic.js";
 import type { TwitchCommand } from "./commands/types.js";
@@ -18,6 +19,10 @@ export async function startTwitchBot() {
   });
 
   chatClient.onMessage(async (channel, user, text, msg) => {
+    recordUserSeen("TWITCH", msg.userInfo.userId, msg.userInfo.displayName).catch((err) => {
+      logger.error({ err }, "Failed to record Twitch user");
+    });
+
     if (!text.startsWith(config.TWITCH_COMMAND_PREFIX)) return;
     const [rawName, ...args] = text.slice(config.TWITCH_COMMAND_PREFIX.length).trim().split(/\s+/);
     const name = rawName?.toLowerCase();

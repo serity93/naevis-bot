@@ -19,6 +19,8 @@ const envSchema = z.object({
     ),
   TWITCH_COMMAND_PREFIX: z.string().default("!"),
 
+  DATABASE_URL: z.string().min(1),
+
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 });
 

@@ -10,12 +10,18 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/src/index.js",
+    "postinstall": "prisma generate",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
     "twitch:auth": "tsx scripts/twitch-auth.ts",
     "discord:register": "tsx scripts/register-discord-commands.ts",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@prisma/client": "^5.20.0",
     "@twurple/auth": "^7.2.0",
     "@twurple/chat": "^7.2.0",
     "discord.js": "^14.16.3",
@@ -23,6 +29,7 @@
     "open": "^10.1.0",
     "pino": "^9.4.0",
     "pino-pretty": "^11.2.2",
+    "prisma": "^5.20.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

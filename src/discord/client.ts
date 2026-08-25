@@ -1,15 +1,23 @@
 import { Client, GatewayIntentBits, Events, MessageFlags } from "discord.js";
 import { config } from "../config.js";
 import { logger } from "../logger.js";
+import { recordUserSeen } from "../core/users/userService.js";
 import { discordCommandMap } from "./registry.js";
 
 export function createDiscordClient() {
   const client = new Client({
-    intents: [GatewayIntentBits.Guilds],
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
   });
 
   client.once(Events.ClientReady, (c) => {
     logger.info({ user: c.user.tag }, "Discord bot logged in");
+  });
+
+  client.on(Events.MessageCreate, (message) => {
+    if (message.author.bot) return;
+    recordUserSeen("DISCORD", message.author.id, message.author.username).catch((err) => {
+      logger.error({ err }, "Failed to record Discord user");
+    });
   });
 
   client.on(Events.InteractionCreate, async (interaction) => {

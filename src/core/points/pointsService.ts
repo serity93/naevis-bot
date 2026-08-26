@@ -1,4 +1,4 @@
-import type { Platform } from "@prisma/client";
+import type { Platform, Prisma } from "@prisma/client";
 import { prisma } from "../../db/client.js";
 
 export const MESSAGE_POINTS = 5;
@@ -37,4 +37,24 @@ export async function getPointsFor(platform: Platform, externalId: string): Prom
     select: { points: true },
   });
   return user?.points ?? 0;
+}
+
+export const ACCOUNT_LINK_POINTS = 100;
+
+// Paid to every identity on a freshly merged account — 100 each, so linking
+// Discord and Twitch is worth 200. Takes the caller's transaction client so the
+// reward commits with the merge itself: no link without the points, and no
+// points without the link.
+export async function awardAccountLinkPoints(tx: Prisma.TransactionClient, userIds: string[]): Promise<void> {
+  await tx.user.updateMany({
+    where: { id: { in: userIds } },
+    data: { points: { increment: ACCOUNT_LINK_POINTS } },
+  });
+  await tx.pointsLedgerEntry.createMany({
+    data: userIds.map((userId) => ({
+      userId,
+      delta: ACCOUNT_LINK_POINTS,
+      reason: "ACCOUNT_LINK" as const,
+    })),
+  });
 }

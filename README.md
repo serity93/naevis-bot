@@ -7,21 +7,38 @@ twitch.tv/redstellar_
 
 ## Current scope
 
-The bot connects and responds on both platforms: `ping`, `uptime`, and
-`help`, implemented once in `src/core/commands` and exposed on both Discord
-(as slash commands) and Twitch (as `!`-prefixed chat commands).
+The bot connects and responds on both platforms: `ping`, `uptime`, `points`,
+and `help`, implemented once in `src/core/commands` and exposed on both
+Discord (as slash commands) and Twitch (as `!`-prefixed chat commands).
 
-It also tracks a lightweight per-platform identity record (`User` in
-Postgres) for anyone who sends a message it sees on either platform — no
-command needed, just first-seen/last-seen bookkeeping keyed by platform +
-external user id. This is _not_ cross-platform account linking (a Discord
-user and a Twitch user are recorded as separate, unrelated rows even if
-they're the same person) — that's a deliberately separate, later feature.
+It tracks a per-platform identity record (`User` in Postgres) for anyone who
+sends a message it sees on either platform — no command needed, just
+first-seen/last-seen bookkeeping keyed by platform + external user id — and
+awards points for chatting via an append-only ledger.
+
+**Cross-platform account linking** ties those per-platform identities
+together. Every `User` belongs to an `Account`; a newly seen identity gets an
+`Account` of its own, and linking merges two of them so one person is one
+internal id. The flow starts on Discord so the code stays private:
+
+1. The user runs `/link` in Discord and gets a one-time code back as an
+   ephemeral (only-they-can-see-it) reply.
+2. They send `!link <code>` in Twitch chat — the stream doesn't have to be
+   live — and the bot confirms in chat.
+
+Codes last 10 minutes, and running `/link` again invalidates the previous
+one. Points stay on the identity that earned them, so an account's total is
+the sum of its identities and a per-platform breakdown survives linking.
+
+Linking pays a one-time reward of 100 points to *each* identity — 200 in
+total — written to the ledger as `ACCOUNT_LINK` inside the same transaction
+as the merge, so the reward and the link can never come apart.
+
+Unlinking isn't implemented yet. When it lands it will need to decide what
+happens to that reward, or re-linking becomes a way to farm it.
 
 Not built yet, on purpose:
 
-- **Cross-platform account linking** — recognizing that a given Discord user
-  and Twitch user are the same person.
 - **Moderation** — will be added once the specific rules/behavior are
   decided (warn/timeout/ban flows, word filtering, etc).
 - **The idol gacha game** — groups/idols/images database, rolling, and
@@ -31,7 +48,7 @@ Not built yet, on purpose:
 
 ```
 src/
-  core/            platform-agnostic logic: shared commands (ping/uptime/help), user tracking
+  core/            platform-agnostic logic: shared commands, user tracking, points, account linking
   discord/         discord.js client, slash commands, event handling
   twitch/          Twurple chat client, chat commands
   db/              Prisma client singleton

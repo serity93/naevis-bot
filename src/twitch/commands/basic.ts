@@ -40,7 +40,7 @@ export const help: TwitchCommand = {
   name: "help",
   description: "List available commands.",
   async run(ctx) {
-    const names = [...sharedCommands.map((c) => c.name), "help"];
+    const names = [...sharedCommands.map((c) => c.name), "link", "help"];
     await ctx.reply(`Available commands: ${names.map((n) => `!${n}`).join(", ")}`);
   },
 };

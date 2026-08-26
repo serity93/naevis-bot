@@ -4,12 +4,13 @@ import { logger } from "../logger.js";
 import { recordMessageActivity } from "../core/activity/activityService.js";
 import { createTwitchAuthProvider } from "./authProvider.js";
 import { basicCommands } from "./commands/basic.js";
+import { linkCommands } from "./commands/link.js";
 import type { TwitchCommand } from "./commands/types.js";
 
 export async function startTwitchBot() {
   const authProvider = await createTwitchAuthProvider();
 
-  const commands: TwitchCommand[] = [...basicCommands];
+  const commands: TwitchCommand[] = [...basicCommands, ...linkCommands];
   const commandMap = new Map(commands.map((c) => [c.name, c]));
 
   const chatClient = new ChatClient({ authProvider, channels: config.TWITCH_CHANNELS });

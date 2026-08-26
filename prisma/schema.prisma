@@ -14,10 +14,25 @@ enum Platform {
 
 enum PointsReason {
   MESSAGE
+  ACCOUNT_LINK
+}
+
+// One human. Groups the platform identities that person has proven they own,
+// so balances can be read per-identity or summed across the whole account.
+// Every User belongs to exactly one Account; a brand new user gets an Account
+// of their own, and linking merges two Accounts into one.
+model Account {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  identities User[]
+  linkCodes  AccountLinkCode[]
 }
 
 model User {
   id          String   @id @default(cuid())
+  accountId   String
+  account     Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
   platform    Platform
   externalId  String // Discord snowflake or Twitch user id
   username    String
@@ -25,13 +40,31 @@ model User {
   lastSeenAt  DateTime @updatedAt
 
   // Derived state, rebuildable from ledgerEntries. Cached so balance reads and
-  // cooldown checks are O(1); the ledger remains the source of truth.
+  // cooldown checks are O(1); the ledger remains the source of truth. Points
+  // stay on the identity that earned them — the account total is their sum —
+  // so a per-platform breakdown is still answerable after linking.
   points              Int       @default(0)
   lastMessagePointsAt DateTime?
 
   ledgerEntries PointsLedgerEntry[]
 
   @@unique([platform, externalId])
+  // An account holds at most one identity per platform, which is what lets
+  // "my Twitch points" resolve to a single row.
+  @@unique([accountId, platform])
+}
+
+// Short-lived proof-of-ownership code: generated on one platform, redeemed on
+// the other. Redeeming merges the two accounts.
+model AccountLinkCode {
+  code      String   @id
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([accountId])
+  @@index([expiresAt])
 }
 
 // Append-only. Nothing updates or deletes rows here — corrections are new rows

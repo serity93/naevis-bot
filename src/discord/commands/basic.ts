@@ -39,7 +39,7 @@ export const points: DiscordCommand = {
 export const help: DiscordCommand = {
   data: new SlashCommandBuilder().setName("help").setDescription("List available commands."),
   async execute(interaction) {
-    const names = [...sharedCommands.map((c) => c.name), "help"];
+    const names = [...sharedCommands.map((c) => c.name), "link", "help"];
     await interaction.reply(`Available commands: ${names.map((n) => `\`/${n}\``).join(", ")}`);
   },
 };

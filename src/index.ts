@@ -3,6 +3,7 @@ import { startDiscordBot } from "./discord/client.js";
 import { startTwitchBot } from "./twitch/client.js";
 import type { WatchtimeTracker } from "./twitch/watchtime.js";
 import { prisma } from "./db/client.js";
+import { initAiChat } from "./core/ai/chatService.js";
 
 let watchtimeTracker: WatchtimeTracker | null = null;
 
@@ -24,6 +25,14 @@ async function main() {
     logger.fatal("Both Discord and Twitch bots failed to start, exiting.");
     process.exit(1);
   }
+
+  // Not awaited: probing Ollama and loading a multi-gigabyte model can take a
+  // couple of minutes, and none of it should delay the bot being usable for
+  // commands. A misconfigured or absent Ollama leaves AI chat off with a
+  // reason in the logs, the same way watchtime degrades on its own.
+  initAiChat().catch((err: unknown) => {
+    logger.error({ err }, "AI chat initialisation failed");
+  });
 }
 
 async function shutdown() {

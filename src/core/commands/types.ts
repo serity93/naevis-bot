@@ -7,6 +7,10 @@ export type Platform = "discord" | "twitch";
 export interface CommandContext {
   platform: Platform;
   args: string[];
+  // Where the command was used. Platform-native id: a Discord channel id, a
+  // Twitch channel login. Shared commands that act on a place rather than on
+  // a person need it — see forgetCommand.
+  channelId: string;
   authorId: string;
   authorName: string;
   reply(text: string): Promise<void>;

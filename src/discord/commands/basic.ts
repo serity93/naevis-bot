@@ -5,6 +5,7 @@ import {
   uptimeCommand,
   pointsCommand,
   naevisbotCommand,
+  forgetCommand,
   sharedCommands,
 } from "../../core/commands/shared.js";
 import type { CommandContext } from "../../core/commands/types.js";
@@ -13,6 +14,7 @@ function toContext(interaction: Parameters<DiscordCommand["execute"]>[0]): Comma
   return {
     platform: "discord",
     args: [],
+    channelId: interaction.channelId,
     authorId: interaction.user.id,
     authorName: interaction.user.username,
     reply: async (text: string) => {
@@ -49,6 +51,13 @@ export const naevisbot: DiscordCommand = {
   },
 };
 
+export const forget: DiscordCommand = {
+  data: new SlashCommandBuilder().setName("forget").setDescription(forgetCommand.description),
+  async execute(interaction) {
+    await forgetCommand.run(toContext(interaction));
+  },
+};
+
 export const help: DiscordCommand = {
   data: new SlashCommandBuilder().setName("help").setDescription("List available commands."),
   async execute(interaction) {
@@ -57,4 +66,4 @@ export const help: DiscordCommand = {
   },
 };
 
-export const basicCommands: DiscordCommand[] = [ping, uptime, points, naevisbot, help];
+export const basicCommands: DiscordCommand[] = [ping, uptime, points, naevisbot, forget, help];

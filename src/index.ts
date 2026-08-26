@@ -1,7 +1,10 @@
 import { logger } from "./logger.js";
 import { startDiscordBot } from "./discord/client.js";
 import { startTwitchBot } from "./twitch/client.js";
+import type { WatchtimeTracker } from "./twitch/watchtime.js";
 import { prisma } from "./db/client.js";
+
+let watchtimeTracker: WatchtimeTracker | null = null;
 
 async function main() {
   logger.info("Starting naevis-bot...");
@@ -14,6 +17,8 @@ async function main() {
   }
   if (twitchResult.status === "rejected") {
     logger.error({ err: twitchResult.reason }, "Twitch bot failed to start");
+  } else {
+    watchtimeTracker = twitchResult.value.watchtime;
   }
   if (results.every((r) => r.status === "rejected")) {
     logger.fatal("Both Discord and Twitch bots failed to start, exiting.");
@@ -23,6 +28,10 @@ async function main() {
 
 async function shutdown() {
   logger.info("Shutting down...");
+  // Stops any further samples being scheduled. A sample already in flight is
+  // left to finish or fail on its own; the worst case is one lost minute of
+  // credit, which isn't worth waiting on.
+  watchtimeTracker?.stop();
   try {
     await prisma.$disconnect();
   } catch (err) {

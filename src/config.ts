@@ -19,6 +19,24 @@ const envSchema = z.object({
     ),
   TWITCH_COMMAND_PREFIX: z.string().default("!"),
 
+  // z.coerce.boolean() would read the string "false" as true, so the accepted
+  // values are spelled out instead.
+  TWITCH_WATCHTIME_ENABLED: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
+  // Logins that shouldn't earn watchtime — other bots parked in the channel.
+  // The bot's own account is excluded automatically.
+  TWITCH_WATCHTIME_IGNORED_USERS: z
+    .string()
+    .default("")
+    .transform((v) =>
+      v
+        .split(",")
+        .map((u) => u.trim().toLowerCase())
+        .filter(Boolean),
+    ),
+
   DATABASE_URL: z.string().min(1),
 
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),

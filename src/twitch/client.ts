@@ -1,14 +1,21 @@
+import { ApiClient } from "@twurple/api";
 import { ChatClient } from "@twurple/chat";
 import { config } from "../config.js";
 import { logger } from "../logger.js";
 import { recordMessageActivity } from "../core/activity/activityService.js";
 import { createTwitchAuthProvider } from "./authProvider.js";
+import { startWatchtimeTracking, type WatchtimeTracker } from "./watchtime.js";
 import { basicCommands } from "./commands/basic.js";
 import { linkCommands } from "./commands/link.js";
 import type { TwitchCommand } from "./commands/types.js";
 
-export async function startTwitchBot() {
-  const authProvider = await createTwitchAuthProvider();
+export interface TwitchBot {
+  chatClient: ChatClient;
+  watchtime: WatchtimeTracker | null;
+}
+
+export async function startTwitchBot(): Promise<TwitchBot> {
+  const { authProvider, botUserId, scopes } = await createTwitchAuthProvider();
 
   const commands: TwitchCommand[] = [...basicCommands, ...linkCommands];
   const commandMap = new Map(commands.map((c) => [c.name, c]));
@@ -51,5 +58,15 @@ export async function startTwitchBot() {
   });
 
   await chatClient.connect();
-  return chatClient;
+
+  // Watchtime is a bonus on top of chat, so its failures stay its own: a bad
+  // token scope or an unreachable Helix shouldn't take the bot down with it.
+  const watchtime = await startWatchtimeTracking(new ApiClient({ authProvider }), botUserId, scopes).catch(
+    (err: unknown) => {
+      logger.error({ err }, "Failed to start Twitch watchtime tracking");
+      return null;
+    },
+  );
+
+  return { chatClient, watchtime };
 }

@@ -15,6 +15,7 @@ enum Platform {
 enum PointsReason {
   MESSAGE
   ACCOUNT_LINK
+  WATCHTIME
 }
 
 // One human. Groups the platform identities that person has proven they own,
@@ -45,6 +46,13 @@ model User {
   // so a per-platform breakdown is still answerable after linking.
   points              Int       @default(0)
   lastMessagePointsAt DateTime?
+
+  // Lifetime seconds this identity has been seen present in a live stream.
+  // Monotonic: the payout boundary is derived from the total rather than
+  // stored, so each 10 minutes it crosses is paid exactly once and nothing
+  // ever needs resetting. Twitch-only — Discord has no notion of presence in
+  // a stream — so it stays 0 on Discord identities.
+  watchtimeSeconds    Int       @default(0)
 
   ledgerEntries PointsLedgerEntry[]
 

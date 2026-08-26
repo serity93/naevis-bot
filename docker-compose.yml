@@ -24,9 +24,14 @@ services:
   ollama:
     image: ollama/ollama:latest
     restart: unless-stopped
-    # Note the absence of a ports: block. Ollama has no authentication of any
-    # kind, so it stays on the compose network where only the bot can reach it.
-    # Use `docker compose exec ollama ...` for admin rather than publishing it.
+    ports:
+      # Bound to 127.0.0.1 rather than 0.0.0.0, which is the whole point of
+      # spelling the address out: Ollama has no authentication of any kind, so
+      # a bare "11434:11434" would put an open inference endpoint on the LAN.
+      # This exists only so host-side tooling — `npm run ai:smoke` and
+      # `npm run dev`, which run outside the compose network — can reach it.
+      # The bot running under compose uses http://ollama:11434 and ignores this.
+      - "127.0.0.1:11434:11434"
     volumes:
       - ollama-models:/root/.ollama
     environment:

@@ -202,8 +202,9 @@ deliberately not published to the host.
    bridge subnet if you do that, since it is unauthenticated.
 
 3. Set `AI_ENABLED=true` in `.env` and restart the bot. `npm run dev` uses
-   `AI_BASE_URL=http://localhost:11434`; under Compose the `bot` service
-   overrides it to `http://ollama:11434`.
+   `AI_BASE_URL=http://localhost:11434`, which the `ollama` service publishes
+   on loopback only; under Compose the `bot` service overrides it to
+   `http://ollama:11434` and reaches it over the compose network instead.
 
 4. Check the whole prompt-and-persona loop without touching a real channel:
 

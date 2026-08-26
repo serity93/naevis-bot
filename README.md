@@ -8,8 +8,9 @@ twitch.tv/redstellar_
 ## Current scope
 
 The bot connects and responds on both platforms: `ping`, `uptime`, `points`,
-and `help`, implemented once in `src/core/commands` and exposed on both
-Discord (as slash commands) and Twitch (as `!`-prefixed chat commands).
+`naevisbot`, and `help`, implemented once in `src/core/commands` and exposed
+on both Discord (as slash commands) and Twitch (as `!`-prefixed chat
+commands).
 
 It tracks a per-platform identity record (`User` in Postgres) for anyone who
 sends a message it sees on either platform — no command needed, just

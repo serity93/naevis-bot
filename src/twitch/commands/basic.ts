@@ -1,5 +1,11 @@
 import type { TwitchCommand, TwitchCommandContext } from "./types.js";
-import { pingCommand, uptimeCommand, pointsCommand, sharedCommands } from "../../core/commands/shared.js";
+import {
+  pingCommand,
+  uptimeCommand,
+  pointsCommand,
+  naevisbotCommand,
+  sharedCommands,
+} from "../../core/commands/shared.js";
 import type { CommandContext } from "../../core/commands/types.js";
 
 function toContext(ctx: TwitchCommandContext): CommandContext {
@@ -36,6 +42,14 @@ export const points: TwitchCommand = {
   },
 };
 
+export const naevisbot: TwitchCommand = {
+  name: "naevisbot",
+  description: naevisbotCommand.description,
+  async run(ctx) {
+    await naevisbotCommand.run(toContext(ctx));
+  },
+};
+
 export const help: TwitchCommand = {
   name: "help",
   description: "List available commands.",
@@ -45,4 +59,4 @@ export const help: TwitchCommand = {
   },
 };
 
-export const basicCommands: TwitchCommand[] = [ping, uptime, points, help];
+export const basicCommands: TwitchCommand[] = [ping, uptime, points, naevisbot, help];

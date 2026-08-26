@@ -37,4 +37,14 @@ export const pointsCommand: SharedCommand = {
   },
 };
 
-export const sharedCommands: SharedCommand[] = [pingCommand, uptimeCommand, pointsCommand];
+export const naevisbotCommand: SharedCommand = {
+  name: "naevisbot",
+  description: "Learn who NaevisBot is.",
+  async run(ctx) {
+    await ctx.reply(
+      "Hello! I am NaevisBot, based on the virtual idol Naevis from the digital world KWANGYA. Nice to meet you!",
+    );
+  },
+};
+
+export const sharedCommands: SharedCommand[] = [pingCommand, uptimeCommand, pointsCommand, naevisbotCommand];

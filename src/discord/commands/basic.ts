@@ -1,6 +1,12 @@
 import { SlashCommandBuilder } from "discord.js";
 import type { DiscordCommand } from "./types.js";
-import { pingCommand, uptimeCommand, pointsCommand, sharedCommands } from "../../core/commands/shared.js";
+import {
+  pingCommand,
+  uptimeCommand,
+  pointsCommand,
+  naevisbotCommand,
+  sharedCommands,
+} from "../../core/commands/shared.js";
 import type { CommandContext } from "../../core/commands/types.js";
 
 function toContext(interaction: Parameters<DiscordCommand["execute"]>[0]): CommandContext {
@@ -36,6 +42,13 @@ export const points: DiscordCommand = {
   },
 };
 
+export const naevisbot: DiscordCommand = {
+  data: new SlashCommandBuilder().setName("naevisbot").setDescription(naevisbotCommand.description),
+  async execute(interaction) {
+    await naevisbotCommand.run(toContext(interaction));
+  },
+};
+
 export const help: DiscordCommand = {
   data: new SlashCommandBuilder().setName("help").setDescription("List available commands."),
   async execute(interaction) {
@@ -44,4 +57,4 @@ export const help: DiscordCommand = {
   },
 };
 
-export const basicCommands: DiscordCommand[] = [ping, uptime, points, help];
+export const basicCommands: DiscordCommand[] = [ping, uptime, points, naevisbot, help];

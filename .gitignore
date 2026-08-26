@@ -1,6 +1,12 @@
 node_modules/
 dist/
 .env
+# Local variants and backups — .env.local, .env.backup-20260826-164542, and so
+# on. Anything but .env.example, which is the committed template and must stay
+# tracked. Without this a `git add -A` after editing config can put real tokens
+# in a commit.
+.env.*
+!.env.example
 tokens/
 *.log
 .DS_Store

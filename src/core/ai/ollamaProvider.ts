@@ -15,8 +15,18 @@ const chatResponseSchema = z.object({
   done_reason: z.string().optional(),
   prompt_eval_count: z.number().optional(),
   eval_count: z.number().optional(),
+  // Both are nanoseconds, which is why they get divided rather than passed
+  // through. eval_duration covers generation only; prompt_eval_duration covers
+  // the pass over the prompt before the first token appears.
   eval_duration: z.number().optional(),
+  prompt_eval_duration: z.number().optional(),
 });
+
+const NS_PER_MS = 1e6;
+
+function nsToMs(ns: number | undefined): number | undefined {
+  return ns === undefined ? undefined : ns / NS_PER_MS;
+}
 
 const tagsResponseSchema = z.object({
   models: z.array(z.object({ name: z.string() })),
@@ -71,6 +81,8 @@ export function createOllamaProvider(): AiProvider {
       return {
         text: parsed.message.content,
         promptTokens: parsed.prompt_eval_count,
+        generationMs: nsToMs(parsed.eval_duration),
+        promptEvalMs: nsToMs(parsed.prompt_eval_duration),
         outputTokens: parsed.eval_count,
         durationMs: Date.now() - startedAt,
       };

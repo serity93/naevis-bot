@@ -65,16 +65,28 @@ try {
     signal: controller.signal,
   });
   const elapsed = Date.now() - startedAt;
-  const tokensPerSecond =
-    result.outputTokens && elapsed > 0 ? ((result.outputTokens / elapsed) * 1000).toFixed(1) : "?";
+
+  // Rates come from Ollama's own eval_duration, not from wall-clock. Dividing
+  // output tokens by total elapsed time folds in prompt evaluation and HTTP
+  // overhead, which on a 250-token system prompt understates the generation
+  // rate several times over — enough to make a healthy GPU look like a CPU
+  // fallback, which is the exact call this number exists to make.
+  const rate = (tokens: number | undefined, ms: number | undefined) =>
+    tokens && ms && ms > 0 ? `${((tokens / ms) * 1000).toFixed(1)} tok/s` : "?";
 
   console.log(`raw:            ${JSON.stringify(result.text)}`);
   console.log(`prompt tokens:  ${String(result.promptTokens ?? "?")}`);
   console.log(`output tokens:  ${String(result.outputTokens ?? "?")}`);
-  console.log(`elapsed:        ${String(elapsed)}ms`);
-  // The number that says whether GPU offload is actually happening. Single
-  // digits here means Ollama fell back to CPU — check `ollama ps`.
-  console.log(`tokens/sec:     ${tokensPerSecond}`);
+  console.log(`wall clock:     ${String(elapsed)}ms`);
+  console.log(
+    `prompt eval:    ${result.promptEvalMs?.toFixed(0) ?? "?"}ms  (${rate(result.promptTokens, result.promptEvalMs)})`,
+  );
+  // The number that says whether GPU offload is actually happening. Under
+  // ~10 tok/s on a small model means Ollama fell back to CPU — check
+  // `ollama ps` for the PROCESSOR column.
+  console.log(
+    `generation:     ${result.generationMs?.toFixed(0) ?? "?"}ms  (${rate(result.outputTokens, result.generationMs)})`,
+  );
 
   const discord = postProcessReply(result.text, "discord");
   const twitch = postProcessReply(result.text, "twitch");

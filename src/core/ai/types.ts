@@ -32,7 +32,16 @@ export interface AiCompletionResult {
   // can't supply them is still a valid provider.
   promptTokens?: number;
   outputTokens?: number;
+  // Wall-clock for the whole request, including transport.
   durationMs?: number;
+  // Time spent generating, excluding prompt evaluation and transport. Kept
+  // separate from durationMs because outputTokens/durationMs is not the
+  // generation rate — on a long prompt the two differ by several times over,
+  // and that rate is what tells you whether the GPU is being used at all.
+  generationMs?: number;
+  // Time spent evaluating the prompt before the first token came out. The
+  // dominant cost when the conversation buffer is full.
+  promptEvalMs?: number;
 }
 
 export interface AiProbeResult {

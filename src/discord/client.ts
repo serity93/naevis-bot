@@ -1,7 +1,7 @@
 import { Client, GatewayIntentBits, Events, MessageFlags } from "discord.js";
 import { config } from "../config.js";
 import { logger } from "../logger.js";
-import { recordUserSeen } from "../core/users/userService.js";
+import { recordMessageActivity } from "../core/activity/activityService.js";
 import { discordCommandMap } from "./registry.js";
 
 export function createDiscordClient() {
@@ -15,8 +15,8 @@ export function createDiscordClient() {
 
   client.on(Events.MessageCreate, (message) => {
     if (message.author.bot) return;
-    recordUserSeen("DISCORD", message.author.id, message.author.username).catch((err) => {
-      logger.error({ err }, "Failed to record Discord user");
+    recordMessageActivity("DISCORD", message.author.id, message.author.username).catch((err) => {
+      logger.error({ err }, "Failed to record Discord message activity");
     });
   });
 

@@ -1,4 +1,6 @@
 import type { SharedCommand } from "./types.js";
+import { toDbPlatform } from "../platform.js";
+import { getPointsFor } from "../points/pointsService.js";
 
 const startedAt = Date.now();
 
@@ -22,4 +24,17 @@ export const uptimeCommand: SharedCommand = {
   },
 };
 
-export const sharedCommands: SharedCommand[] = [pingCommand, uptimeCommand];
+export const pointsCommand: SharedCommand = {
+  name: "points",
+  description: "Check how many points you have.",
+  async run(ctx) {
+    const points = await getPointsFor(toDbPlatform(ctx.platform), ctx.authorId);
+    if (points === 0) {
+      await ctx.reply("You don't have any points yet — chat a little and they'll start rolling in.");
+      return;
+    }
+    await ctx.reply(`You have ${points} point${points === 1 ? "" : "s"}.`);
+  },
+};
+
+export const sharedCommands: SharedCommand[] = [pingCommand, uptimeCommand, pointsCommand];

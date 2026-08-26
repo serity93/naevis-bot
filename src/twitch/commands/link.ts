@@ -2,6 +2,7 @@ import type { TwitchCommand } from "./types.js";
 import { config } from "../../config.js";
 import { recordUserSeen } from "../../core/users/userService.js";
 import { redeemLinkCode } from "../../core/accounts/accountService.js";
+import { ACCOUNT_LINK_POINTS } from "../../core/points/pointsService.js";
 
 export const link: TwitchCommand = {
   name: "link",
@@ -19,10 +20,9 @@ export const link: TwitchCommand = {
 
     if (result.ok) {
       const discord = result.identities.find((i) => i.platform === "DISCORD");
+      const who = discord ? ` (${discord.username})` : "";
       await ctx.reply(
-        discord
-          ? `Linked! Your Twitch and Discord (${discord.username}) accounts are now one account.`
-          : "Linked! Your Twitch and Discord accounts are now one account.",
+        `Linked! Your Twitch and Discord${who} accounts are now one account, and ${ACCOUNT_LINK_POINTS} bonus points have been added to each of them.`,
       );
       return;
     }

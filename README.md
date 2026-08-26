@@ -29,7 +29,13 @@ internal id. The flow starts on Discord so the code stays private:
 Codes last 10 minutes, and running `/link` again invalidates the previous
 one. Points stay on the identity that earned them, so an account's total is
 the sum of its identities and a per-platform breakdown survives linking.
-Unlinking isn't implemented yet.
+
+Linking pays a one-time reward of 100 points to *each* identity — 200 in
+total — written to the ledger as `ACCOUNT_LINK` inside the same transaction
+as the merge, so the reward and the link can never come apart.
+
+Unlinking isn't implemented yet. When it lands it will need to decide what
+happens to that reward, or re-linking becomes a way to farm it.
 
 Not built yet, on purpose:
 

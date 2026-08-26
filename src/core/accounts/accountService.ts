@@ -1,6 +1,7 @@
 import { randomInt } from "node:crypto";
 import { Prisma, type Platform, type User } from "@prisma/client";
 import { prisma } from "../../db/client.js";
+import { awardAccountLinkPoints } from "../points/pointsService.js";
 
 export const LINK_CODE_LENGTH = 6;
 export const LINK_CODE_TTL_MS = 10 * 60 * 1000;
@@ -113,6 +114,18 @@ export async function redeemLinkCode(code: string, redeemingUserId: string): Pro
       where: { accountId: { in: [targetAccountId, sourceAccountId] } },
     });
     await tx.account.delete({ where: { id: sourceAccountId } });
+
+    // The reward for linking, paid inside the merge transaction so the two
+    // can never come apart. Both identities are on the target account by now,
+    // so this covers the redeemer as well as the code issuer.
+    const linked = await tx.user.findMany({
+      where: { accountId: targetAccountId },
+      select: { id: true },
+    });
+    await awardAccountLinkPoints(
+      tx,
+      linked.map((i) => i.id),
+    );
 
     const identities = await tx.user.findMany({
       where: { accountId: targetAccountId },

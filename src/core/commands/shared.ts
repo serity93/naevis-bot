@@ -1,6 +1,7 @@
 import type { SharedCommand } from "./types.js";
 import { toDbPlatform } from "../platform.js";
 import { getPointsFor } from "../points/pointsService.js";
+import { clearHistory, historyKey } from "../ai/history.js";
 
 const startedAt = Date.now();
 
@@ -47,4 +48,27 @@ export const naevisbotCommand: SharedCommand = {
   },
 };
 
-export const sharedCommands: SharedCommand[] = [pingCommand, uptimeCommand, pointsCommand, naevisbotCommand];
+export const forgetCommand: SharedCommand = {
+  name: "forget",
+  description: "Make NaevisBot forget the current conversation.",
+  async run(ctx) {
+    // Not mod-gated on purpose. Clearing a volatile chat buffer isn't a
+    // moderation action — the worst case is that the bot forgets a joke — and
+    // gating it would leave a derailed conversation derailed until a mod
+    // happens to show up.
+    const cleared = clearHistory(historyKey(ctx.platform, ctx.channelId));
+    await ctx.reply(
+      cleared
+        ? "Okay, I've forgotten what we were talking about — fresh start!"
+        : "I wasn't remembering anything in here anyway.",
+    );
+  },
+};
+
+export const sharedCommands: SharedCommand[] = [
+  pingCommand,
+  uptimeCommand,
+  pointsCommand,
+  naevisbotCommand,
+  forgetCommand,
+];

@@ -17,6 +17,7 @@
     "prisma:studio": "prisma studio",
     "twitch:auth": "tsx scripts/twitch-auth.ts",
     "discord:register": "tsx scripts/register-discord-commands.ts",
+    "ai:smoke": "tsx scripts/ai-smoke.ts",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

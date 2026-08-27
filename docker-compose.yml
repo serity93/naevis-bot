@@ -7,11 +7,48 @@ services:
       - .env
     environment:
       DATABASE_URL: postgresql://naevis:naevis@postgres:5432/naevis
+      # Set here rather than in .env for the same reason DATABASE_URL is: the
+      # value differs between `npm run dev` (localhost) and the container.
+      # environment: overrides env_file:, so .env keeps the dev-friendly one.
+      AI_BASE_URL: http://ollama:11434
     volumes:
       - ./tokens:/app/tokens
     depends_on:
       postgres:
         condition: service_healthy
+      # Ordering only, deliberately not service_healthy. AI chat is fail-soft
+      # by design, and a slow model load must not hold chat commands hostage.
+      ollama:
+        condition: service_started
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      # Bound to 127.0.0.1 rather than 0.0.0.0, which is the whole point of
+      # spelling the address out: Ollama has no authentication of any kind, so
+      # a bare "11434:11434" would put an open inference endpoint on the LAN.
+      # This exists only so host-side tooling — `npm run ai:smoke` and
+      # `npm run dev`, which run outside the compose network — can reach it.
+      # The bot running under compose uses http://ollama:11434 and ignores this.
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    environment:
+      # A model reload costs 5-15s on modest hardware, so keep it warm.
+      OLLAMA_KEEP_ALIVE: 30m
+      # One generation at a time. A 4GB card doesn't run two in parallel, it
+      # runs both slower and risks spilling the KV cache out of VRAM. Paired
+      # with the semaphore in src/core/ai/limits.ts.
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   postgres:
     image: postgres:16-alpine
@@ -32,3 +69,4 @@ services:
 
 volumes:
   postgres-data:
+  ollama-models:

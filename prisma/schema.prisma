@@ -52,7 +52,7 @@ model User {
   // stored, so each 10 minutes it crosses is paid exactly once and nothing
   // ever needs resetting. Twitch-only — Discord has no notion of presence in
   // a stream — so it stays 0 on Discord identities.
-  watchtimeSeconds    Int       @default(0)
+  watchtimeSeconds Int @default(0)
 
   ledgerEntries PointsLedgerEntry[]
 
@@ -87,4 +87,43 @@ model PointsLedgerEntry {
   createdAt DateTime     @default(now())
 
   @@index([userId, createdAt])
+}
+
+// A message the bot posted that hands out roles by reaction. The Discord
+// message is the only copy of the embed anyone sees; this row is what lets the
+// bot recognise reactions on it and re-render it on edit.
+model ReactionRoleMessage {
+  id          String   @id @default(cuid())
+  guildId     String
+  channelId   String
+  // Reaction events only carry the message id, so lookups key on this.
+  // Reposting into another channel swaps it for the new message's id.
+  messageId   String   @unique
+  title       String?
+  content     String
+  color       Int
+  createdById String // Discord user id of the admin who set it up
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  options ReactionRoleOption[]
+
+  @@index([guildId])
+}
+
+model ReactionRoleOption {
+  id           String              @id @default(cuid())
+  configId     String
+  config       ReactionRoleMessage @relation(fields: [configId], references: [id], onDelete: Cascade)
+  // Custom emoji id, or the unicode emoji with U+FE0F stripped — Discord is
+  // inconsistent about reporting the variation selector, so it can't be part
+  // of the match.
+  emojiKey     String
+  // What gets rendered in the embed and reacted with: "🎮" or "<:name:id>".
+  emojiDisplay String
+  roleId       String
+  position     Int // order the reactions appear in
+
+  @@unique([configId, emojiKey])
+  @@unique([configId, roleId])
 }

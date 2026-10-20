@@ -79,6 +79,35 @@ why and carries on without watchtime; chat is unaffected. Two env vars tune it:
 `TWITCH_WATCHTIME_IGNORED_USERS`, a comma-separated list of logins that
 shouldn't earn — other bots parked in the channel. The bot excludes itself.
 
+**Reaction roles** let server members pick their own roles. An admin sets up
+a message with `/reactroles create`; the bot posts it as an embed with one
+reaction per role, and reacting gives you that role while removing the
+reaction takes it away. The bot confirms each change by DM, or, if your DMs are
+closed, with a short channel message that deletes itself after a few seconds.
+
+`/reactroles` is only visible to members with **Manage Roles** (adjustable
+per role under Server Settings → Integrations). It has four subcommands:
+
+- `list` shows every reaction-role message in the server with a jump link,
+  and flags any whose message or roles have since been deleted.
+- `create` opens a private setup panel: pick the channel, write the content
+  (optional title and border colour), then add emoji → role pairs. Type
+  standard emoji by pasting them; server emoji can be typed by name
+  (`:pepe:`). The panel previews the embed as you go and posts it when you
+  press **Publish**. The emoji → role list under the content is generated
+  automatically and kept in sync.
+- `edit` opens the same panel filled in from an existing message. Content
+  changes edit the message in place; pairs you add get a new reaction; pairs
+  you remove have their reactions cleared. Changing the channel reposts the
+  message and deletes the old one.
+- `delete` removes the message and its configuration after a confirmation.
+
+None of these take roles away from anyone: deleting or moving a message, or
+removing a pair, leaves existing role holders as they are. Unreacting on the
+new message is what removes a role. Only roles that already exist can be
+picked, and the bot refuses `@everyone`, integration-managed roles, and any
+role at or above its own highest role, since Discord won't let it assign those.
+
 Not built yet, on purpose:
 
 - **Moderation** — will be added once the specific rules/behavior are
@@ -90,7 +119,8 @@ Not built yet, on purpose:
 
 ```
 src/
-  core/            platform-agnostic logic: shared commands, user tracking, points, watchtime accrual, account linking
+  core/            platform-agnostic logic: shared commands, user tracking, points, watchtime accrual, account linking, reaction-role storage
+  discord/reactionRoles/  reaction-role setup panel, publishing, and reaction handling
   core/ai/         persona, prompt assembly, Ollama provider, rate limits, conversation buffer
   discord/         discord.js client, slash commands, event handling
   twitch/          Twurple chat client, chat commands, watchtime polling
@@ -111,8 +141,13 @@ prisma/
 
 1. Create an application + bot at https://discord.com/developers/applications.
 2. Invite the bot to your server with the `bot` and `applications.commands`
-   scopes. No special permissions are needed beyond reading and sending
-   messages in the channels you want it in.
+   scopes. Most features only need it to read and send messages in the
+   channels you want it in. Reaction roles also need **Manage Roles**,
+   **Manage Messages** (to clear an emoji's reactions when a pair is
+   removed), **Add Reactions**, **Embed Links** and **Read Message
+   History**. In Server Settings → Roles, drag the bot's role above every
+   role it should hand out; Discord won't let a bot assign roles ranked at
+   or above its own.
 3. Enable the **Message Content** privileged intent under Bot → Privileged
    Gateway Intents. It is free to turn on while the bot is in fewer than 100
    servers, and AI chat needs it: without it Discord blanks message content

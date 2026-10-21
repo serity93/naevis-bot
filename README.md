@@ -94,8 +94,9 @@ per role under Server Settings → Integrations). It has four subcommands:
   (optional title and border colour), then add emoji → role pairs. Type
   standard emoji by pasting them; server emoji can be typed by name
   (`:pepe:`). The panel previews the embed as you go and posts it when you
-  press **Publish**. The emoji → role list under the content is generated
-  automatically and kept in sync.
+  press **Publish**. By default an emoji → role list is generated under the
+  content and kept in sync; untick **Show the emoji → role list** in the
+  content form to describe the pairs in your own words instead.
 - `edit` opens the same panel filled in from an existing message. Content
   changes edit the message in place; pairs you add get a new reaction; pairs
   you remove have their reactions cleared. Changing the channel reposts the

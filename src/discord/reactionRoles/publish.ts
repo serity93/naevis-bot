@@ -122,7 +122,13 @@ async function post(channel: PostableChannel, draft: Draft): Promise<Message> {
 }
 
 function viewOf(draft: Draft) {
-  return { title: draft.title, content: draft.content ?? "", color: draft.color, pairs: draft.pairs };
+  return {
+    title: draft.title,
+    content: draft.content ?? "",
+    color: draft.color,
+    showRoleList: draft.showRoleList,
+    pairs: draft.pairs,
+  };
 }
 
 function fieldsOf(draft: Draft, message: Message): ReactionRoleFields {
@@ -133,6 +139,7 @@ function fieldsOf(draft: Draft, message: Message): ReactionRoleFields {
     title: draft.title,
     content: draft.content ?? "",
     color: draft.color,
+    showRoleList: draft.showRoleList,
   };
 }
 

@@ -93,18 +93,21 @@ model PointsLedgerEntry {
 // message is the only copy of the embed anyone sees; this row is what lets the
 // bot recognise reactions on it and re-render it on edit.
 model ReactionRoleMessage {
-  id          String   @id @default(cuid())
-  guildId     String
-  channelId   String
+  id           String   @id @default(cuid())
+  guildId      String
+  channelId    String
   // Reaction events only carry the message id, so lookups key on this.
   // Reposting into another channel swaps it for the new message's id.
-  messageId   String   @unique
-  title       String?
-  content     String
-  color       Int
-  createdById String // Discord user id of the admin who set it up
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  messageId    String   @unique
+  title        String?
+  content      String
+  color        Int
+  // Whether the embed lists the emoji → role pairs under the content. Off
+  // for admins who describe the pairs in their own words.
+  showRoleList Boolean  @default(true)
+  createdById  String // Discord user id of the admin who set it up
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   options ReactionRoleOption[]
 

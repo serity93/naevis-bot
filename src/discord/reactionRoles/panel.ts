@@ -2,6 +2,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  CheckboxBuilder,
   ChannelSelectMenuBuilder,
   ChannelType,
   EmbedBuilder,
@@ -119,6 +120,7 @@ export function renderPanel(draft: Draft, guild: Guild, notice?: string) {
     title: draft.title,
     content: draft.content ?? "*Your message will go here.*",
     color: draft.color,
+    showRoleList: draft.showRoleList,
     pairs: draft.pairs,
   });
 
@@ -197,19 +199,24 @@ function contentModal(draft: Draft): ModalBuilder {
     .setMaxLength(7)
     .setValue(formatColor(draft.color));
 
+  const showRoleList = new CheckboxBuilder().setCustomId("showRoleList").setDefault(draft.showRoleList);
+
   return new ModalBuilder()
     .setCustomId(customId("contentmodal", draft.id))
     .setTitle("Message content")
     .addLabelComponents(
       new LabelBuilder().setLabel("Title (optional)").setTextInputComponent(title),
-      new LabelBuilder()
-        .setLabel("Message")
-        .setDescription("The emoji → role list is added underneath automatically.")
-        .setTextInputComponent(content),
+      new LabelBuilder().setLabel("Message").setTextInputComponent(content),
       new LabelBuilder()
         .setLabel("Border colour")
         .setDescription("Hex, e.g. #5865F2. Leave blank for the default.")
         .setTextInputComponent(color),
+      new LabelBuilder()
+        .setLabel("Show the emoji → role list")
+        .setDescription(
+          "Lists each pair under your message and keeps it up to date. Untick to write your own.",
+        )
+        .setCheckboxComponent(showRoleList),
     );
 }
 
@@ -387,6 +394,7 @@ async function onContent(interaction: ModalSubmitInteraction<"cached">, draft: D
   }
   draft.content = content;
   draft.title = title || null;
+  draft.showRoleList = interaction.fields.getCheckbox("showRoleList");
   if (color === null) {
     await refresh(
       interaction,

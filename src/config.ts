@@ -5,6 +5,14 @@ const envSchema = z.object({
   DISCORD_TOKEN: z.string().min(1),
   DISCORD_CLIENT_ID: z.string().min(1),
   DISCORD_DEV_GUILD_ID: z.string().optional(),
+  // Auto role needs the Server Members privileged intent, and Discord refuses
+  // the whole login if the bot asks for an intent the Developer Portal hasn't
+  // granted. Off by default so a deployment that pulls this change keeps
+  // connecting until someone has ticked that box.
+  DISCORD_AUTO_ROLE_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
 
   TWITCH_CLIENT_ID: z.string().min(1),
   TWITCH_CLIENT_SECRET: z.string().min(1),

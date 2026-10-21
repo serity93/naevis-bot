@@ -127,3 +127,13 @@ model ReactionRoleOption {
   @@unique([configId, emojiKey])
   @@unique([configId, roleId])
 }
+
+// The role every new member gets once they're fully in the server — past the
+// rules screen and, where the server uses it, onboarding. At most one per
+// server; members who were already here when it's set are left alone.
+model AutoRole {
+  guildId     String   @id
+  roleId      String
+  updatedById String // Discord user id of the admin who last set it
+  updatedAt   DateTime @updatedAt
+}

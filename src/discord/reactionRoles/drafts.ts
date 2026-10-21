@@ -12,6 +12,7 @@ export interface Draft {
   title: string | null;
   content: string | null;
   color: number;
+  showRoleList: boolean;
   pairs: ReactionRolePair[];
   touchedAt: number;
 }
@@ -46,6 +47,7 @@ export function createDraft(guildId: string, ownerId: string, from?: ReactionRol
     title: from?.title ?? null,
     content: from?.content ?? null,
     color: from?.color ?? DEFAULT_COLOR,
+    showRoleList: from?.showRoleList ?? true,
     pairs:
       from?.options.map((o) => ({ emojiKey: o.emojiKey, emojiDisplay: o.emojiDisplay, roleId: o.roleId })) ??
       [],

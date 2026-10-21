@@ -16,6 +16,7 @@ export interface ReactionRoleView {
   title: string | null;
   content: string;
   color: number;
+  showRoleList: boolean;
   pairs: ReactionRolePair[];
 }
 
@@ -25,7 +26,7 @@ export interface ReactionRoleView {
  * really does. Role mentions inside an embed never ping.
  */
 export function buildReactionRoleEmbed(view: ReactionRoleView): EmbedBuilder {
-  const lines = view.pairs.map((p) => `${p.emojiDisplay} — <@&${p.roleId}>`);
+  const lines = view.showRoleList ? view.pairs.map((p) => `${p.emojiDisplay} — <@&${p.roleId}>`) : [];
   const description = [view.content, lines.join("\n")].filter(Boolean).join("\n\n");
 
   const embed = new EmbedBuilder().setColor(view.color).setDescription(description || "​");

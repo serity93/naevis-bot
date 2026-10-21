@@ -16,6 +16,7 @@ export interface ReactionRoleFields {
   title: string | null;
   content: string;
   color: number;
+  showRoleList: boolean;
 }
 
 const withOptions = { options: { orderBy: { position: "asc" } } } as const;

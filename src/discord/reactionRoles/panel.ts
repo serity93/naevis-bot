@@ -25,6 +25,7 @@ import {
   type StringSelectMenuInteraction,
 } from "discord.js";
 import { logger } from "../../logger.js";
+import { roleAssignProblem } from "../roles.js";
 import { getConfig } from "../../core/reactionRoles/reactionRoleService.js";
 import { createDraft, discardDraft, getDraft, isDraftComplete, type Draft } from "./drafts.js";
 import { parseEmojiInput } from "./emoji.js";
@@ -422,7 +423,7 @@ async function onPair(interaction: ModalSubmitInteraction<"cached">, draft: Draf
     return;
   }
 
-  const problem = validateRole(guild, role.id);
+  const problem = roleAssignProblem(guild, role.id);
   if (problem) {
     await refresh(interaction, draft, `⚠️ ${problem}`);
     return;
@@ -447,19 +448,6 @@ async function onPair(interaction: ModalSubmitInteraction<"cached">, draft: Draf
 
   draft.pairs.push({ ...parsed.emoji, roleId: role.id });
   await refresh(interaction, draft);
-}
-
-function validateRole(guild: Guild, roleId: string): string | null {
-  const role = guild.roles.cache.get(roleId);
-  if (!role) return "That role no longer exists.";
-  if (role.id === guild.id) return "@everyone can't be handed out by reaction — everyone already has it.";
-  if (role.managed)
-    return `<@&${role.id}> is managed by an integration or bot, so it can't be assigned by hand.`;
-  const me = guild.members.me;
-  if (me && me.roles.highest.comparePositionTo(role) <= 0) {
-    return `<@&${role.id}> is at or above my highest role, so I can't assign it. Move my role above it in Server Settings → Roles.`;
-  }
-  return null;
 }
 
 async function onRemovePair(interaction: StringSelectMenuInteraction<"cached">, draft: Draft) {

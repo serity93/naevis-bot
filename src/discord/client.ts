@@ -6,6 +6,7 @@ import { discordCommandMap } from "./registry.js";
 import { maybeHandleAiChat } from "./aiChat.js";
 import { CUSTOM_ID_PREFIX, handleReactionRoleInteraction } from "./reactionRoles/panel.js";
 import { handleReactionChange } from "./reactionRoles/reactions.js";
+import { handleMemberAdd, handleMemberUpdate, warmAutoRoleGuilds } from "./autoRole.js";
 
 export function createDiscordClient() {
   const client = new Client({
@@ -20,6 +21,9 @@ export function createDiscordClient() {
       // random bug rather than a missing permission.
       GatewayIntentBits.MessageContent,
       GatewayIntentBits.GuildMessageReactions,
+      // Privileged too. Join and member-update events — what auto role runs
+      // on — aren't sent at all without it.
+      ...(config.DISCORD_AUTO_ROLE_ENABLED ? [GatewayIntentBits.GuildMembers] : []),
     ],
     // Reactions on messages the bot hasn't cached — every reaction-role
     // message, after a restart — are dropped entirely without these. With
@@ -30,6 +34,25 @@ export function createDiscordClient() {
 
   client.once(Events.ClientReady, (c) => {
     logger.info({ user: c.user.tag }, "Discord bot logged in");
+    if (config.DISCORD_AUTO_ROLE_ENABLED) {
+      warmAutoRoleGuilds(c).catch((err: unknown) => {
+        logger.error({ err }, "Failed to load members for auto role");
+      });
+    }
+  });
+
+  // Without the GuildMembers intent these never fire, so they're safe to
+  // register unconditionally.
+  client.on(Events.GuildMemberAdd, (member) => {
+    handleMemberAdd(member).catch((err: unknown) => {
+      logger.error({ err }, "Failed to handle auto role on join");
+    });
+  });
+
+  client.on(Events.GuildMemberUpdate, (old, member) => {
+    handleMemberUpdate(old, member).catch((err: unknown) => {
+      logger.error({ err }, "Failed to handle auto role on member update");
+    });
   });
 
   client.on(Events.MessageCreate, (message) => {

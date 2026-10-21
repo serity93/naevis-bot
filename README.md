@@ -109,6 +109,16 @@ new message is what removes a role. Only roles that already exist can be
 picked, and the bot refuses `@everyone`, integration-managed roles, and any
 role at or above its own highest role, since Discord won't let it assign those.
 
+**Auto role** gives every new member a role once they've finished joining:
+after they accept the rules (membership screening) and, if the server uses
+it, complete onboarding — not the moment they press Join. Bots are skipped,
+and members who were already in the server when it's set aren't touched.
+`/autorole set role:` picks the role, `/autorole show` shows it along with
+anything stopping it from being assigned, and `/autorole clear` turns it off
+(nobody loses the role). Like `/reactroles` it's only visible to members with
+**Manage Roles**, and refuses the same roles. It is off by default — see
+step 3 under [Discord application](#1-discord-application).
+
 Not built yet, on purpose:
 
 - **Moderation** — will be added once the specific rules/behavior are
@@ -120,8 +130,9 @@ Not built yet, on purpose:
 
 ```
 src/
-  core/            platform-agnostic logic: shared commands, user tracking, points, watchtime accrual, account linking, reaction-role storage
+  core/            platform-agnostic logic: shared commands, user tracking, points, watchtime accrual, account linking, reaction-role and auto-role storage
   discord/reactionRoles/  reaction-role setup panel, publishing, and reaction handling
+  discord/autoRole.ts     assigns the auto role once a new member is past screening and onboarding
   core/ai/         persona, prompt assembly, Ollama provider, rate limits, conversation buffer
   discord/         discord.js client, slash commands, event handling
   twitch/          Twurple chat client, chat commands, watchtime polling
@@ -155,6 +166,11 @@ prisma/
    everywhere except messages that directly mention the bot, so replying to
    the bot with the ping toggled off (one click in Discord's reply box)
    arrives empty and goes unanswered. Everything else works without it.
+   For auto role, also enable **Server Members Intent** there and set
+   `DISCORD_AUTO_ROLE_ENABLED=true` — Discord only sends join and
+   member-update events with it, and refuses the bot's login if the env var
+   is on but the intent isn't. Auto role also needs **Manage Roles**, with the
+   bot's role above the one it hands out.
 4. Copy the bot token and application (client) ID into `.env`.
 
 ### 2. Twitch application
